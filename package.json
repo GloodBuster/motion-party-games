@@ -1,0 +1,21 @@
+{
+  "name": "motion-party-games",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.11.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --stream -r dev",
+    "dev:http": "cross-env VITE_HTTPS=false pnpm --parallel --stream -r dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
