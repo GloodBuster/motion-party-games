@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bolos 3D — Motion Party (Host)</title>
+  </head>
+  <body>
+    <div id="viewport-root">
+      <canvas id="alley-canvas"></canvas>
+
+      <!-- Barra superior: Marcador oficial 10 frames + controles rápidos -->
+      <header class="hud-top">
+        <div class="brand-cluster">
+          <div class="logo-title">🎳 BOLOS 3D</div>
+          <div class="room-mini">
+            Sala <strong id="hud-room-code">----</strong>
+            <span id="hud-player-count" class="pill">0 mandos</span>
+          </div>
+        </div>
+
+        <div id="scoreboard-container" class="scoreboard-container"></div>
+
+        <div class="hud-actions">
+          <button id="toggle-qr-btn" class="hud-btn" type="button" title="Mostrar/ocultar QR (Q)">
+            QR / Sala
+          </button>
+          <button id="toggle-diag-btn" class="hud-btn" type="button" title="Diagnóstico IMU (D)">
+            Sensores IMU
+          </button>
+          <button id="mute-btn" class="hud-btn" type="button" title="Silenciar audio (M)">
+            🔊
+          </button>
+          <button id="restart-host-btn" class="hud-btn hud-btn-accent" type="button">
+            Reiniciar
+          </button>
+        </div>
+      </header>
+
+      <!-- Panel diagnóstico IMU en vivo (Hito 1) -->
+      <aside id="diag-panel" class="glass-panel diag-panel hidden">
+        <div class="panel-header">
+          <h3>Diagnóstico IMU en tiempo real</h3>
+          <span id="diag-transport" class="badge badge-muted">Sin mando</span>
+        </div>
+
+        <div class="horizon-wrap">
+          <div id="horizon-dial" class="horizon-dial">
+            <div id="horizon-bar" class="horizon-bar"></div>
+            <div class="horizon-center"></div>
+          </div>
+          <div class="diag-numbers">
+            <div><span>Pitch:</span> <strong id="diag-pitch">0.0°</strong></div>
+            <div><span>Roll (Efecto):</span> <strong id="diag-roll">0.0°</strong></div>
+            <div><span>Aceleración:</span> <strong id="diag-accel">0.0 m/s²</strong></div>
+            <div><span>Estado agarre:</span> <strong id="diag-hold">Libre</strong></div>
+          </div>
+        </div>
+
+        <div class="diag-stats-grid">
+          <div class="stat-tile">
+            <span>Tasa</span>
+            <strong id="diag-hz">0 Hz</strong>
+          </div>
+          <div class="stat-tile">
+            <span>Descartados</span>
+            <strong id="diag-dropped">0</strong>
+          </div>
+          <div class="stat-tile">
+            <span>Últ. tiro</span>
+            <strong id="diag-last-throw">--</strong>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Panel Lobby / Código QR -->
+      <aside id="qr-panel" class="glass-panel qr-panel">
+        <div class="panel-header">
+          <div>
+            <span class="eyebrow">CONECTA TU TELÉFONO COMO MANDO</span>
+            <h2>Escanea el código QR</h2>
+          </div>
+          <button id="close-qr-btn" class="icon-close" type="button" aria-label="Cerrar">✕</button>
+        </div>
+
+        <div class="qr-layout">
+          <div class="qr-box">
+            <canvas id="qr-canvas" width="220" height="220"></canvas>
+            <div class="qr-code-text">
+              Código: <strong id="qr-room-code">----</strong>
+            </div>
+          </div>
+
+          <div class="qr-details">
+            <p class="qr-instructions">
+              1. Conecta el móvil al <strong>mismo Wi-Fi</strong> que este PC.<br />
+              2. Escanea el QR (acepta el aviso de certificado local HTTPS si aparece).<br />
+              3. Pulsa <em>Conectar y activar sensores</em> y ¡a jugar!
+            </p>
+
+            <label class="url-field">
+              <span>URL del mando (editable si usas túnel/IP):</span>
+              <div class="url-input-row">
+                <input id="controller-url-input" type="text" />
+                <button id="apply-url-btn" type="button" class="hud-btn">Aplicar</button>
+              </div>
+            </label>
+
+            <div class="players-section">
+              <div class="players-header">Jugadores conectados (máx. 4)</div>
+              <ul id="players-list" class="players-list">
+                <li class="empty-players">Esperando primer teléfono...</li>
+              </ul>
+            </div>
+
+            <div class="qr-footer-actions">
+              <button id="open-sim-btn" type="button" class="hud-btn hud-btn-accent">
+                Abrir mando simulado (PC)
+              </button>
+              <button id="quick-throw-btn" type="button" class="hud-btn">
+                Tiro rápido demo (Espacio)
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Banner central de eventos (STRIKE, SPARE, CANALETA...) -->
+      <div id="callout-banner" class="callout-banner hidden">
+        <div id="callout-title" class="callout-title">STRIKE!</div>
+        <div id="callout-sub" class="callout-sub">10 pinos derribados</div>
+      </div>
+
+      <!-- Modal de fin de partida -->
+      <div id="gameover-modal" class="gameover-modal hidden">
+        <div class="glass-panel gameover-card">
+          <span class="eyebrow">PARTIDA COMPLETADA</span>
+          <h2 id="gameover-winner">¡Gran partida!</h2>
+          <div id="gameover-standings" class="standings-list"></div>
+          <button id="play-again-btn" type="button" class="btn-big">Jugar otra partida</button>
+        </div>
+      </div>
+
+      <!-- Barra inferior informativa -->
+      <footer class="hud-bottom">
+        <div id="turn-banner" class="turn-banner">
+          Escanea el QR con tu móvil o pulsa <strong>Espacio</strong> para un tiro de prueba.
+        </div>
+        <div id="throw-readout" class="throw-readout"></div>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
