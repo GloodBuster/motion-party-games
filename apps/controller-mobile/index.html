@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b1120" />
+    <title>Mando Bolos — Motion Party</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Pantalla de conexión -->
+      <section id="join-screen" class="screen">
+        <div class="brand">
+          <span class="brand-badge">MOTION PARTY</span>
+          <h1>Mando de Bolos</h1>
+          <p class="subtitle">
+            Conecta tu móvil a la pantalla del PC/TV para lanzar usando el movimiento de tu muñeca.
+          </p>
+        </div>
+
+        <form id="join-form" class="card">
+          <label class="field">
+            <span>Código de sala</span>
+            <input
+              id="room-code-input"
+              type="text"
+              maxlength="4"
+              autocomplete="off"
+              autocapitalize="characters"
+              placeholder="Ej: K7MP"
+              required
+            />
+          </label>
+
+          <label class="field">
+            <span>Tu nombre</span>
+            <input
+              id="player-name-input"
+              type="text"
+              maxlength="18"
+              placeholder="Jugador 1"
+            />
+          </label>
+
+          <button id="connect-btn" type="submit" class="btn-primary">
+            Conectar y activar sensores
+          </button>
+
+          <p id="join-status" class="status-note">
+            Se solicitará permiso de sensores y bloqueo de suspensión de pantalla.
+          </p>
+        </form>
+      </section>
+
+      <!-- Pantalla de mando activo -->
+      <section id="controller-screen" class="screen hidden">
+        <header class="top-bar">
+          <div class="player-pill">
+            <span id="player-color-dot" class="color-dot"></span>
+            <strong id="player-name-label">Jugador</strong>
+            <span id="room-code-badge" class="code-pill">----</span>
+          </div>
+          <div class="metrics-pill">
+            <span id="transport-badge" class="badge badge-connecting">Conectando</span>
+            <span id="rtt-label" class="mono">-- ms</span>
+          </div>
+        </header>
+
+        <section class="turn-card">
+          <div class="turn-row">
+            <div>
+              <div id="turn-title" class="turn-title">Conectado a la sala</div>
+              <div id="turn-subtitle" class="turn-subtitle">Esperando estado de la pista...</div>
+            </div>
+            <div class="score-box">
+              <span class="score-caption">PUNTOS</span>
+              <strong id="score-value">0</strong>
+            </div>
+          </div>
+          <div class="meta-strip">
+            <span id="frame-label">Frame 1 · Tiro 1</span>
+            <span id="pins-label">10 pinos</span>
+            <span id="wakelock-label">Pantalla activa: --</span>
+          </div>
+        </section>
+
+        <!-- Controles de posición y ángulo -->
+        <section class="aim-card">
+          <div class="aim-row">
+            <span class="aim-label">Posición pista</span>
+            <div class="aim-controls">
+              <button id="lane-left-btn" type="button" class="btn-step" aria-label="Mover izquierda">◀</button>
+              <input id="lane-slider" type="range" min="-100" max="100" value="0" />
+              <button id="lane-right-btn" type="button" class="btn-step" aria-label="Mover derecha">▶</button>
+            </div>
+          </div>
+
+          <div class="aim-row">
+            <span class="aim-label">Ángulo (<span id="angle-value">0°</span>)</span>
+            <div class="aim-controls">
+              <button id="angle-left-btn" type="button" class="btn-step" aria-label="Girar izquierda">↺</button>
+              <input id="angle-slider" type="range" min="-14" max="14" value="0" />
+              <button id="angle-right-btn" type="button" class="btn-step" aria-label="Girar derecha">↻</button>
+              <button id="recenter-btn" type="button" class="btn-mini">Recentrar</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Botón gigante de agarre y swing -->
+        <section class="grip-zone">
+          <button id="grip-btn" type="button" class="grip-btn">
+            <span class="grip-icon">🎳</span>
+            <span id="grip-main-text" class="grip-main">MANTÉN PULSADO PARA AGARRAR</span>
+            <span id="grip-sub-text" class="grip-sub">
+              Haz el swing hacia delante y suelta el botón en pantalla
+            </span>
+          </button>
+
+          <div class="live-telemetry">
+            <div class="meter">
+              <span>Fuerza swing</span>
+              <div class="bar-track"><div id="accel-bar" class="bar-fill"></div></div>
+              <span id="accel-value" class="mono">0.0</span>
+            </div>
+            <div class="meter">
+              <span>Efecto muñeca</span>
+              <div class="bar-track center-track"><div id="roll-indicator" class="roll-dot"></div></div>
+              <span id="roll-value" class="mono">0°</span>
+            </div>
+          </div>
+
+          <p class="safety-note">
+            Seguridad: sujeta siempre el teléfono con firmeza. Solo suelta el botón táctil al lanzar.
+          </p>
+        </section>
+
+        <!-- Acción fin de partida -->
+        <button id="restart-btn" type="button" class="btn-primary hidden">
+          Jugar otra partida
+        </button>
+
+        <!-- Modo simulador (para pruebas en PC o navegadores sin IMU) -->
+        <details id="sim-panel" class="sim-card">
+          <summary>Modo simulador (pruebas sin sensores)</summary>
+          <div class="sim-body">
+            <label class="sim-field">
+              <span>Potencia (<strong id="sim-power-val">78%</strong>)</span>
+              <input id="sim-power-slider" type="range" min="25" max="100" value="78" />
+            </label>
+            <label class="sim-field">
+              <span>Efecto / Hook (<strong id="sim-spin-val">0.0</strong>)</span>
+              <input id="sim-spin-slider" type="range" min="-100" max="100" value="0" />
+            </label>
+            <button id="sim-throw-btn" type="button" class="btn-sim">
+              Lanzar bola (Simulado)
+            </button>
+          </div>
+        </details>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
